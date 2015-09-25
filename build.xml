@@ -1,0 +1,67 @@
+<project name="ZimbraOpenFire" default="jar">
+
+    <import file="../../ant-global.xml" />
+
+    <!-- Properties -->
+    <property name="deploy.dir" location="/usr/local/openfire/lib/" />
+    <property name="jar.file" value="zimbraopenfire.jar" />
+
+    <path id="all.java.path">
+        <pathelement location="${src.java.dir}" />
+    </path>
+
+    <path id="class.path">
+        <pathelement location="${common.classes.dir}" />
+        <pathelement location="${build.classes.dir}" />
+        <pathelement location="${soap.classes.dir}" />
+        <fileset dir="${common.jars.dir}">
+            <include name="**/*.jar" />
+        </fileset>
+        <fileset dir="${jars.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Targets -->
+    <target name="build-init">
+        <mkdir dir="${build.classes.dir}" />
+       <delete dir="${dist.dir}" failonerror="false" />
+       <mkdir dir="${dist.dir}/" />
+    </target>
+
+    <target name="compile" depends="build-init" description="Compiles the source code">
+        <ant dir="${common.dir}" target="jar" inheritAll="false" />
+                <ant dir="${client.dir}" target="jar" inheritAll="false" />
+        <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path">
+            <src refid="all.java.path" />
+        </javac>
+    </target>
+
+    <target name="jar" depends="compile" description="Creates the jar file">
+        <antcall target="zimbra-jar">
+            <param name="implementation.title" value="Zimbra Openfire"/>
+        </antcall>
+    </target>
+
+    <target name="clean" description="Removes build files and undeploys extension">
+        <delete dir="${build.dir}" />
+        <delete dir="${dist.dir}" failonerror="false" />
+    </target>
+
+    <target name="deploy-jar" depends="jar" description="Copies the jar file into the extension directory">
+        <copy file="${build.dir}/${jar.file}" tofile="${deploy.dir}/${jar.file}"/>
+        <copy file="${common.jarfile}" todir="${deploy.dir}"/>
+        <copy file="${soap.jarfile}" todir="${deploy.dir}"/>
+    </target>
+    <target name="dist" description="place output and all required jars into ./dist folder" depends="jar">
+        <copy file="${build.dir}/${jar.file}" tofile="${dist.dir}/${jar.file}"/>
+        <copy file="${common.jarfile}" todir="${dist.dir}"/>
+        <copy file="${soap.jarfile}" todir="${dist.dir}"/>
+        <copy file="${common.jars.dir}/json.jar" todir="${dist.dir}"/>
+        <copy todir="${dist.dir}">
+            <fileset dir="${common.jars.dir}">
+                <include name="**/guava*.jar"/>
+            </fileset>
+        </copy>
+    </target>
+</project>
